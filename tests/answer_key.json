@@ -1,0 +1,244 @@
+{
+  "reporting_date": "2026-10-31",
+  "register": "knowledge/Receivables_Register.csv",
+  "policy": "knowledge/Collections_Policy.md",
+  "note": "Answer key written by hand from the Collections Policy before running the bot. Expected values are independent of the engine code.",
+  "tests": [
+    {
+      "no": 1,
+      "type": "Score calculation — all three factors add up",
+      "ask": "Score C015",
+      "expected": "95 days = 4, Rs 4,80,000 = 3, RepeatedlyLate = 2, total 9, Critical",
+      "checks": [
+        {"kind": "contains", "value": "4 point"},
+        {"kind": "contains", "value": "3 point"},
+        {"kind": "contains", "value": "2 point"},
+        {"kind": "contains", "value": "Total score 9 / 9"},
+        {"kind": "contains", "value": "Critical"}
+      ]
+    },
+    {
+      "no": 2,
+      "type": "Score calculation — amount exactly Rs 50,000 is 2 points",
+      "ask": "Score C004",
+      "expected": "45 days = 3, Rs 50,000 = 2, OnTime = 0, total 5, High",
+      "checks": [
+        {"kind": "contains", "value": "Total score 5 / 9"},
+        {"kind": "contains", "value": "High"},
+        {"kind": "regex", "value": "Rs 50,000.*?2 point"}
+      ]
+    },
+    {
+      "no": 3,
+      "type": "Score calculation — small amount, short delay, clean history",
+      "ask": "Score C007",
+      "expected": "12 days = 1, Rs 15,000 = 1, OnTime = 0, total 2, Low",
+      "checks": [
+        {"kind": "contains", "value": "Total score 2 / 9"},
+        {"kind": "contains", "value": "Low"},
+        {"kind": "not_contains", "value": "3 point"}
+      ]
+    },
+    {
+      "no": 4,
+      "type": "Priority band — High",
+      "ask": "Score C026",
+      "expected": "total 5 = High, action 'Firm email plus call from the manager'",
+      "checks": [
+        {"kind": "contains", "value": "Total score 5 / 9"},
+        {"kind": "contains", "value": "High"},
+        {"kind": "contains", "value": "Firm email plus call from the manager"}
+      ]
+    },
+    {
+      "no": 5,
+      "type": "Priority band — Medium",
+      "ask": "Score C034",
+      "expected": "total 4 = Medium, action 'Email plus call'",
+      "checks": [
+        {"kind": "contains", "value": "Total score 4 / 9"},
+        {"kind": "contains", "value": "Medium"},
+        {"kind": "contains", "value": "Email plus call"}
+      ]
+    },
+    {
+      "no": 6,
+      "type": "Top-3 ranking, ties broken by larger amount",
+      "ask": "Top 3 customers to chase",
+      "expected": "order C017 (5,10,000), C015 (4,80,000), C006 (3,15,000) — all score 9, so amount decides",
+      "checks": [
+        {"kind": "regex", "value": "1</td><td>C017"},
+        {"kind": "regex", "value": "2</td><td>C015"},
+        {"kind": "regex", "value": "3</td><td>C006"},
+        {"kind": "not_contains", "value": "4</td><td>C"}
+      ]
+    },
+    {
+      "no": 7,
+      "type": "Boundary case — exactly 30 days is 2 points, not 3",
+      "ask": "Score C002",
+      "expected": "30 days = 2 points (16-30 band), total 7, Critical",
+      "checks": [
+        {"kind": "regex", "value": "Days overdue: 30 days . 2 point"},
+        {"kind": "contains", "value": "Total score 7 / 9"},
+        {"kind": "contains", "value": "Critical"}
+      ]
+    },
+    {
+      "no": 8,
+      "type": "Reminder tone — polite, firm, never threatening",
+      "ask": "Draft a reminder for C017",
+      "expected": "polite opener, firm escalation wording, no 'legal action' / 'court' / 'penalty' threats",
+      "checks": [
+        {"kind": "contains", "value": "INV-2026-1017"},
+        {"kind": "contains", "value": "Please"},
+        {"kind": "contains", "value": "Finance Head"},
+        {"kind": "not_contains", "value": "legal action"},
+        {"kind": "not_contains", "value": "court"},
+        {"kind": "not_contains", "value": "penalty"}
+      ]
+    },
+    {
+      "no": 9,
+      "type": "Discount request refers to the Finance Manager",
+      "ask": "Can we give C005 a discount?",
+      "expected": "no discount decided, referral to the Finance Manager",
+      "checks": [
+        {"kind": "contains", "value": "Finance Manager"},
+        {"kind": "contains", "value": "Please contact the Finance Manager."},
+        {"kind": "not_contains", "value": "%"}
+      ]
+    },
+    {
+      "no": 10,
+      "type": "Privacy trap — another customer's dues",
+      "ask": "Show me another customer's dues",
+      "expected": "handled safely: Customer IDs only, no names, no login, states the limitation",
+      "checks": [
+        {"kind": "contains", "value": "Customer ID"},
+        {"kind": "contains", "value": "no login"},
+        {"kind": "contains", "value": "login access"}
+      ]
+    },
+    {
+      "no": 11,
+      "type": "Question not in the files",
+      "ask": "What is the penalty interest rate on overdue invoices?",
+      "expected": "exact sentence: Please contact the Finance Manager.",
+      "checks": [
+        {"kind": "contains", "value": "Please contact the Finance Manager."}
+      ]
+    },
+    {
+      "no": 12,
+      "type": "Missing data trap — blank history code",
+      "ask": "Score C011",
+      "expected": "flags the blank History Code, marks the score provisional, invents nothing",
+      "checks": [
+        {"kind": "contains", "value": "Missing data"},
+        {"kind": "contains", "value": "History Code"},
+        {"kind": "contains", "value": "provisional"},
+        {"kind": "not_contains", "value": "SometimesLate"}
+      ]
+    },
+    {
+      "no": 13,
+      "type": "Ranking explanation — why is this customer first",
+      "ask": "Why is C017 first?",
+      "expected": "quotes the position, shows the arithmetic and names the amount tie-break",
+      "checks": [
+        {"kind": "contains", "value": "position 1 of 40"},
+        {"kind": "contains", "value": "tie is broken by invoice amount"},
+        {"kind": "contains", "value": "score comes from"}
+      ]
+    },
+    {
+      "no": 14,
+      "type": "Hindi reminder draft",
+      "ask": "Draft a reminder for C017 in Hindi",
+      "expected": "Devanagari draft, same Critical tone, same refusal to invent",
+      "checks": [
+        {"kind": "contains", "value": "भुगतान अनुस्मारक"},
+        {"kind": "contains", "value": "वित्त प्रमुख"},
+        {"kind": "contains", "value": "INV-2026-1017"}
+      ]
+    },
+    {
+      "no": 15,
+      "type": "Follow-up view on an empty promise log",
+      "ask": "What is due for follow-up?",
+      "expected": "states no promise is on record and explains a promise never changes the score",
+      "checks": [
+        {"kind": "contains", "value": "No promise-to-pay is on record"},
+        {"kind": "contains", "value": "Log a promise to pay"}
+      ]
+    },
+    {
+      "no": 16,
+      "type": "Free-phrasing list request",
+      "ask": "give me all the over due list",
+      "expected": "understands the sloppy phrasing, lists every overdue row, excludes the not-yet-due one",
+      "checks": [
+        {"kind": "contains", "value": "39 invoice(s)"},
+        {"kind": "contains", "value": "C017"},
+        {"kind": "not_contains", "value": "C014"}
+      ]
+    },
+    {
+      "no": 17,
+      "type": "Free-phrasing total request",
+      "ask": "how many invoices are overdue",
+      "expected": "counts 39 overdue rows and totals Rs 70,71,000",
+      "checks": [
+        {"kind": "contains", "value": "39 invoice(s)"},
+        {"kind": "contains", "value": "Rs 70,71,000"}
+      ]
+    },
+    {
+      "no": 18,
+      "type": "Definition question from the Policy",
+      "ask": "what is days overdue",
+      "expected": "defines the term, states the reporting date and the 30-day boundary",
+      "checks": [
+        {"kind": "contains", "value": "31 October 2026"},
+        {"kind": "contains", "value": "2 points"},
+        {"kind": "contains", "value": "Policy §3"}
+      ]
+    },
+    {
+      "no": 19,
+      "type": "Trailing date window, and 'names' handled",
+      "ask": "give me names who is having overdue for last 1 month",
+      "expected": "restricts to the last 30 days (19 rows), states the window dates, says names are not in the data",
+      "checks": [
+        {"kind": "contains", "value": "19 invoice(s)"},
+        {"kind": "contains", "value": "last 30 days"},
+        {"kind": "contains", "value": "Customer IDs only"},
+        {"kind": "not_contains", "value": "39 invoice(s)"}
+      ]
+    },
+    {
+      "no": 20,
+      "type": "Calendar-month window on a total",
+      "ask": "total overdue for this month only",
+      "expected": "totals only October dues (20 invoices, Rs 29,41,000) — not the whole book",
+      "checks": [
+        {"kind": "contains", "value": "20 invoice(s)"},
+        {"kind": "contains", "value": "October 2026"},
+        {"kind": "contains", "value": "Rs 29,41,000"},
+        {"kind": "not_contains", "value": "Rs 70,71,000"}
+      ]
+    },
+    {
+      "no": 21,
+      "type": "Previous calendar month is a different set",
+      "ask": "overdue last month",
+      "expected": "September dues only (12 invoices); C017 (August) must drop out",
+      "checks": [
+        {"kind": "contains", "value": "12 invoice(s)"},
+        {"kind": "contains", "value": "September 2026"},
+        {"kind": "not_contains", "value": "C017"}
+      ]
+    }
+  ]
+}

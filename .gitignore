@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.tmp/
+
+# holds the optional Gemini key — copy from config.example.json
+config.json
+
+# demo content, regenerated on demand
+state/

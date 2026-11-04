@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Policy self-check — ABC Traders</title>
+<link rel="stylesheet" href="/styles.css" />
+<style>
+  main { max-width: 860px; margin: 0 auto; padding: 26px 20px 60px; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  .lede { color: var(--ink-soft); margin: 0 0 18px; }
+  .score { font-size: 34px; font-weight: 700; margin: 10px 0; }
+  .score.pass { color: var(--low); }
+  .score.fail { color: var(--crit); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 12px; }
+  th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--line); }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); background: var(--bg); }
+  tr.fail td { background: #fdf3f2; }
+  td.ok { color: var(--low); font-weight: 700; }
+  td.no { color: var(--crit); font-weight: 700; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); margin: 22px 0 0; }
+  .back { display: inline-block; margin-top: 22px; font-size: 13px; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">AT</div>
+    <div><h1 style="font-size:16px">Policy self-check</h1>
+    <p class="sub">Live proof of every boundary in the Collections Policy</p></div>
+  </div>
+</header>
+<main>
+  <p class="lede">
+    Each row below runs the scoring function the assistant actually uses against a
+    known input, and compares it with the value the Policy demands. A boundary that
+    drifts shows up here immediately, before it can reach a customer.
+  </p>
+  <div class="score" id="score">running…</div>
+  <p class="note" id="boundary"></p>
+  <div id="tables"></div>
+  <a class="back" href="/">← back to the assistant</a>
+</main>
+<script src="/policy.js"></script>
+</body>
+</html>

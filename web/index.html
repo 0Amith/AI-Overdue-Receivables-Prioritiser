@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ABC Traders — Receivables Assistant</title>
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">AT</div>
+    <div>
+      <h1>ABC Traders Receivables Assistant</h1>
+      <p class="sub">Overdue prioritisation &amp; reminder drafting · <span id="asof">reporting date <strong>31 Oct 2026</strong></span></p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="modeswitch" role="group" aria-label="Test version">
+      <button id="mode-v1" type="button">Version 1<span>dates counted by bot</span></button>
+      <button id="mode-v2" type="button" class="on">Version 2<span>Days Overdue column</span></button>
+    </div>
+    <span class="badge" id="health">offline · rule-based</span>
+    <span class="badge warnbadge" id="dataset-badge" hidden>imported dataset</span>
+    <span class="ai-badge" id="ai-status">checking…</span>
+  </div>
+</header>
+
+<p class="dsbanner" id="dsbanner" hidden></p>
+
+<div class="exposure" id="exposure" aria-label="Exposure by priority band"></div>
+
+<main class="layout">
+  <section class="chatpane">
+    <div class="chatlog" id="log" aria-live="polite"></div>
+    <div class="composer">
+      <div class="chips" id="chips"></div>
+      <form id="form" autocomplete="off">
+        <input id="input" name="message" placeholder="Ask about a Customer ID, a ranking, or a reminder draft…" maxlength="500" />
+        <button id="send" type="submit">Send</button>
+      </form>
+      <p class="hint">Deterministic rule engine — every figure cites the Policy or the Register. The bot recommends; Accounts Receivable decides.</p>
+    </div>
+  </section>
+
+  <aside class="sidepane">
+    <div class="sidetools">
+      <h2>Work the list</h2>
+      <div class="tools">
+        <a class="tool" href="/api/worklist.csv" download>⬇ Worklist CSV</a>
+        <button class="tool" type="button" data-pack="auto">Reminder pack</button>
+        <a class="tool" href="/api/board.md" download>⬇ Board brief</a>
+        <a class="tool" href="/api/aging.csv" download>⬇ Ageing report</a>
+        <a class="tool" href="/policy-check" target="_blank" rel="noopener">Policy check</a>
+        <a class="tool" href="/api/audit.csv" download>Audit log</a>
+        <button class="tool" type="button" id="import-open">Import a dataset…</button>
+      </div>
+      <h2 class="mt">Receivables Register</h2>
+      <input id="filter" placeholder="Filter Customer ID or priority…" />
+      <div class="filters" id="pfilters">
+        <button data-p="All" class="on">All</button>
+        <button data-p="Critical">Critical</button>
+        <button data-p="High">High</button>
+        <button data-p="Medium">Medium</button>
+        <button data-p="Low">Low</button>
+        <button data-p="Followup">Follow-up</button>
+        <button data-p="Disputed">Disputed</button>
+      </div>
+    </div>
+    <div class="tablewrap">
+      <table class="reg">
+        <thead><tr><th>Customer</th><th>Days</th><th>Amount</th><th>Score</th><th>Priority</th></tr></thead>
+        <tbody id="regbody"></tbody>
+      </table>
+    </div>
+    <p class="sidefoot">Click a row to ask about that customer. <span class="flag">!</span> marks a missing field, <span class="promiseflag">P</span> a promise on record.</p>
+  </aside>
+</main>
+
+<dialog id="promisedlg">
+  <form method="dialog" id="promiseform">
+    <h3>Log a promise to pay — <span id="promisecid"></span></h3>
+    <p class="note">A promise never changes the score. It puts the customer at the top of the follow-up list.</p>
+    <label>Promised date<input type="date" id="promisedate" required /></label>
+    <label>Note (optional)<input type="text" id="promisenote" maxlength="200" placeholder="e.g. part payment agreed with accountant" /></label>
+    <div class="dlgrow">
+      <button type="button" id="promiseclear" class="ghost">Clear promise</button>
+      <span class="spacer"></span>
+      <button type="button" id="promisecancel" class="ghost">Cancel</button>
+      <button type="submit" id="promisesave">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="contactdlg">
+  <form method="dialog" id="contactform">
+    <h3>Log a contact — <span id="contactcid"></span></h3>
+    <p class="note">The outcome never changes the score. It records what happened so the same customer is not chased twice, and a dispute can be held out of the queue.</p>
+    <label>Outcome
+      <select id="contactoutcome">
+        <option>no answer</option>
+        <option>spoke to customer</option>
+        <option>disputed</option>
+        <option>part paid</option>
+        <option>paid in full</option>
+      </select>
+    </label>
+    <label>Note (optional)<input type="text" id="contactnote" maxlength="200" placeholder="e.g. says invoice wrong, needs credit note" /></label>
+    <div class="dlgrow">
+      <button type="button" id="contactclear" class="ghost">Clear record</button>
+      <span class="spacer"></span>
+      <button type="button" id="contactcancel" class="ghost">Cancel</button>
+      <button type="submit" id="contactsave">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="importdlg">
+  <form method="dialog" id="importform">
+    <h3>Import a dataset</h3>
+    <p class="note">Any CSV works. Columns are matched by name — pick them yourself if the guess is wrong. Amounts may carry Rs, ₹ or commas; dates ISO, dd/mm/yyyy or dd-Mon-yyyy.</p>
+    <label>CSV file<input type="file" id="importfile" accept=".csv,text/csv" /></label>
+    <label>Score everything as on<input type="date" id="importdate" /></label>
+    <div id="importmap" class="importmap"></div>
+    <div id="importissues" class="importissues"></div>
+    <div id="importsample" class="importsample"></div>
+    <p class="note">Rows with the same customer ID fold into one customer (earliest due date, amounts added) — promises, contacts and the queue are per customer.</p>
+    <div class="dlgrow">
+      <button type="button" id="importreset" class="ghost">Restore demo register</button>
+      <span class="spacer"></span>
+      <button type="button" id="importcancel" class="ghost">Cancel</button>
+      <button type="submit" id="importapply" disabled>Import</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="/app.js"></script>
+</body>
+</html>
